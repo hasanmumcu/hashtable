@@ -1,5 +1,5 @@
 
-package hashtable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -9,6 +9,7 @@ import java.util.HashMap;
 public class ProbeHashMap<K,V> extends AbstractHashMap<K,V> {
     private MapEntry<K,V>[] table;        // a fixed array of entries (all initially null)
     private MapEntry<K,V> DEFUNCT = new MapEntry<>(null, null);   //sentinel
+    int collision = 0;
 
    
     public ProbeHashMap() { super(); }
@@ -32,24 +33,13 @@ public class ProbeHashMap<K,V> extends AbstractHashMap<K,V> {
     }
 
 
-    private int findEmptySlot(int index, int increment) {
-		
-		int step = 0;
-		
-		while(table[index] != null) {
-			
-			index = (index + increment) % table.length;
-			step += 1;
-		}
-		
-		return step; 
-	}
+  
     protected V bucketGet(K key) {
 		
 		MapEntry<K,V> element = contains(key);
 		String result = new String();
 		if(element == null) return null;
-                
+                result += element.getMap().size() + " document(s) found.\n";
                 for(HashMap.Entry<V,Integer> entry : element.getMap().entrySet()){
                     result += entry.getKey() + " " + entry.getValue() + "\n";
                 }
@@ -151,7 +141,7 @@ public class ProbeHashMap<K,V> extends AbstractHashMap<K,V> {
 			}
 		}
               
-		
+	
 	}
     private int newPrimeCapacity() {
 		
@@ -187,22 +177,27 @@ public class ProbeHashMap<K,V> extends AbstractHashMap<K,V> {
         MapEntry<K,V> ifFound = null;
         
         
+        
         if(value == null) throw new IllegalArgumentException("Given value can not be null!");
         
         else if(oldEntry == null) {
 			
 			table[index] = newEntry;
 			this.size += 1;
-                    
+                     
 	}
         else if((ifFound = contains(key)) != null ) { // Collision detected.
            
             ifFound.update(value);
+            
 	}
         else
         {
+         
             while(table[index]!=null){
                 index = (index + 1) % table.length;
+                collision++;
+                
              
             }
             table[index] = newEntry;
@@ -255,8 +250,11 @@ public class ProbeHashMap<K,V> extends AbstractHashMap<K,V> {
         @Override
            public void printMap(){
                for(MapEntry<K,V> a : table){
-                   System.out.println(a);
+                 
+                    System.out.println(a);
                }
-        
+               System.out.println(this.collision);
+               System.out.println(this.size);
+                          
         }
 }

@@ -1,9 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package hashtable;
+
 
 
 import java.util.HashMap;
@@ -19,12 +14,12 @@ public class MapEntry<K,V> implements Entry<K,V>{
 	private K key;
 	private V value;
 
-        private HashMap <V, Integer> test;
+        private HashMap <V, Integer> map;
 
 	
 	
 	public MapEntry(K key, V value) {
-		this.test = new HashMap  <V, Integer> ();
+		this.map = new HashMap  <V, Integer> ();
 		this.key = key;
 		this.value = value;
 		update(value);
@@ -33,10 +28,10 @@ public class MapEntry<K,V> implements Entry<K,V>{
 	}
         public MapEntry(){super();}
         public void update(V value){
-            if(test.containsKey(value))
-                test.put(value, test.get(value) + 1 );
+            if(map.containsKey(value))
+                map.put(value, map.get(value) + 1 );
             else
-                test.put(value , 1);
+                map.put(value , 1);
         }
 	
 	/**
@@ -92,7 +87,7 @@ public class MapEntry<K,V> implements Entry<K,V>{
 	 * @return the hash code of key of entry.
 	 */
         public HashMap<V, Integer> getMap(){
-            return this.test;
+            return this.map;
             
         }
         
@@ -104,7 +99,8 @@ public class MapEntry<K,V> implements Entry<K,V>{
 	}
         
         public String toString(){
-            return this.key + " " + " " + this.value  + " " + this.test + " " + (this.hashCode() % 11);
+
+            return String.format("Key: %-20s Total docs: %-4d HashCode: %15d", this.key, this.map.size(), this.key.hashCode());
             
         }
          

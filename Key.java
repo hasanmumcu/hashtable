@@ -1,9 +1,14 @@
 
-package hashtable;
+
 public class Key {
 
 	private String key;
 	private int hash; 
+        public static enum HashMethod{
+            SSF,
+            PAF
+        };
+        private HashMethod hashMethod;
 	
 	/**
 	 * Creates new Key with given string key.
@@ -13,7 +18,14 @@ public class Key {
 	public Key(String key) {
 		
 		this.key = key;
+                this.hashMethod = hashMethod.SSF;
 	}
+        
+        public Key(String key, HashMethod hashMethod){
+        
+            this.key = key;
+            this.hashMethod = hashMethod;
+        }
 
   
 	
@@ -23,10 +35,10 @@ public class Key {
 	 */
 	@Override 
 	public int hashCode() {
-		
-		int h = hash;
+            int h = hash;
 			
 		if(h == 0 && key.length() > 0) {
+                    if(this.hashMethod == HashMethod.SSF){
 				
 			char value[] = key.toCharArray();
 				
@@ -36,15 +48,29 @@ public class Key {
                              
                                 
 			}
-			
+                    }
+                    else{
+                        
+                    	char value[] = key.toCharArray();
+                        
+				
+			for(int i = 0 ; i < value.length; i++) {
+					
+				h = h + (value[i]-96)* (int)Math.pow(33, value.length-i-1);  
+                                
+                                
+			}
+//			
+  
+                    }
+	
 			hash = h;
+                        
 		}
 		return h;
 	}
-	
-	/**
-	 * @return value of key.
-	 */
+  
+
 	@Override
 	public String toString() {
 		

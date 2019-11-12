@@ -1,24 +1,29 @@
 
-package hashtable;
+
+
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Scanner;
 
 
 public class Management {
-    private AbstractHashMap<Key, String> probeHashTable;
-    private AbstractHashMap<Key, String> doubleHashTable; 
+    private AbstractHashMap<Key, String> hashTable;
     private Scanner scan;
     private BufferedReader read;
+    private BufferedReader readStop;
     private FileReader fileRead;
-    private Key key;
-    private MapEntry mapEntry;
-    
-    private static final String DEFAULTFILE = "stop_words_en.txt";
-    private String DELIMITERS = "[-+=" +
+    private FileReader fileReadStop;
+    private ArrayList<String> stopWords;
+    private Key.HashMethod hashMethod;
+    int bucketPutCounter = 0;
+    long startTime = System.currentTimeMillis();
+
+    String DELIMITERS = "[-+=" +
 		        " " +        //space
 		        "\r\n " +    //carriage return line fit
 				"1234567890" + //numbers
@@ -67,197 +72,242 @@ public class Management {
 				"‽" +        // interrobang
 				"※" +          // reference mark
 		        "]";
-				
 
-//    private Management management;
-  
-      
+
+
+
+
     public static void main(String[] args) {
-	
+
 	new Management();
     }
-    
+
+
     public Management() {
-        this(DEFAULTFILE);
-   	
-	}
-    
-    public Management(String fileName) {
-		
 		try {
-			 
-			 probeHashTable = new ProbeHashMap<Key,String>();
-                         doubleHashTable = new DoubleHashMap<Key, String>();
-                         mapEntry = new MapEntry<String,Integer>();  
-			 fileRead = new FileReader(fileName);
-			 read = new BufferedReader(fileRead);
+                         
+			 hashTable = new DoubleHashMap<Key,String>();
+                         hashMethod = Key.HashMethod.SSF; 
 			 scan = new Scanner(System.in);
+                         stopWords  = new ArrayList<String>();
+                         stopWords = readStopWords(stopWords);
 			 readFile();
 			 run();
-                         
-                         
-                         
-                         
-                         
-			 
+
+
+
+
+
+
 		}catch(IOException e) { System.out.println("\n\nERROR : Txt file is not found.");}
 	}
-    
+
     private void readFile() throws IOException {
-  
+
         File folder = new File("bbc");
         File[] listOfFiles = folder.listFiles();
-        
+
+
         for (int i = 0; i < listOfFiles.length; i++) {
-               
+
             File txtfile = listOfFiles[i];
             File[] listOfTxtFile = txtfile.listFiles();
-         
+
             for (int j = 0; j < listOfTxtFile.length; j++) {
-                      
+
                 try {
-                
+
                 fileRead = new FileReader( listOfTxtFile[j]);
-             
+
                     read = new BufferedReader(fileRead);
                     String line = null;
                     String[] words = null;
-		
+
                     while((line = read.readLine()) != null) {
-               
+
                         words = line.split(DELIMITERS);
-			
-                        for(String s : words) {
+                        
+
+                        for (int k = 0; k < words.length; k++) {
+                            words[k] = words[k].toLowerCase(Locale.ENGLISH);
+                            words[k] = words[k].replaceAll("ı", "i");
+                        
+                            if(!fileContainsWord(stopWords, words[k]) && !words[k].equals("")){
                             
-                                
-			
-                            if(!s.equals("")) {	
-                                s = s.toLowerCase();
-                                        
-						
-                                probeHashTable.put(new Key(s),String.valueOf(listOfTxtFile[j]));
-                                  
-				}	
-                           
+                                hashTable.put(new Key(words[k], hashMethod),String.valueOf(listOfTxtFile[j]));
+                                bucketPutCounter++;
                             }
+                            
+                            
+
+                        }
                         
-                        
+
                     }
-			
+                  
+                 
+                    System.out.println(listOfTxtFile[j]);
+                    
+
+	                }catch(IOException e) { }
+            }                  
+        }
+        long endTime = System.currentTimeMillis();
+        
+       
+        System.out.println((endTime - startTime)/ 1000 );
+        System.out.println(bucketPutCounter);
+        
+    }
+
+   private boolean fileContainsWord(ArrayList<String> file, String word){
+
+     for(String file_word : file)
+        if(file_word.equalsIgnoreCase(word))
+            return true;
+
+     return false;
+   }
+   
+  private ArrayList<String> readFile(String fileName) throws Exception{
+      
+      ArrayList<String> lines = new ArrayList<String>();
+      FileReader file = new FileReader(fileName);
+      BufferedReader br = new BufferedReader(file);
+      String line = null;
+      while((line = br.readLine()) != null){
+         lines.add(line);
+      }
+      
+      return lines;
+  }
+
+   private ArrayList<String> readStopWords(ArrayList<String> stopWords){
+
+        try {
+
+                fileReadStop = new FileReader("stop_words_en.txt");
+
+                    readStop = new BufferedReader(fileReadStop);
+                    String line = null;
+
+                    while((line = readStop.readLine()) != null) {
+
+
+                        stopWords.add(line);
+
+                     }
+
 	}catch(IOException e) { }
 
-                
-            }
+        return stopWords;
 
-        }  
-        probeHashTable.printMap();
     }
-	
-    
+
+
     private void run() {
-		
+
 		Key key = null;
 		String input = null;
-		
+
 		do {
-			System.out.print("\n\nSearch : ");
+			System.out.print("\n\n> Search : ");
 			input = scan.nextLine().toLowerCase();
-			
-			
+
+
 			if(input.contains("ı"))
 				input = input.replace("ı", "i");
-			
-			if(!"-exit".equals(input) && !"-show".equals(input)) {
-				
-				key = new Key(input);
-			
-				if(probeHashTable.get(key) != null) {
-				
-					//printResults(key.hashCode(), probeHashTable.getIndex(key), mapEntry.toString1());
-					System.out.println(probeHashTable.get(key));					
-											
+
+			if(!"-exit".equals(input) && !"-show".equals(input) && !"-test".equals(input)) {
+
+				key = new Key(input, hashMethod);
+
+				if(hashTable.get(key) != null) {
+
+					//printResults(key.hashCode(), hashTable.getIndex(key), mapEntry.toString1());
+					System.out.println(hashTable.get(key));
+
 				}
-				else 
+				else
 					printNotFound(key.toString());
 			}
-			
-		}while(!"-exit".equals(input) && !"-show".equals(input));
+                        
+                        else if("-show".equals(input)) { // show degistirilecek!!!
+
+                            hashTable.printMap();
+
+                        }
+                        else if("-test".equals(input)) {
+                            int count = 0;
+                            try{
+                                ArrayList<String> searchFile = readFile("1000.txt");
+                                for(String str : searchFile){
+                                    System.out.println(str + ": " + hashTable.get(new Key(str, hashMethod)));
+                                    if(hashTable.get(new Key(str, hashMethod)) != null) count++;
+                                }
+                                System.out.println("Found: " + count);
+                            }
+                            catch(Exception ex){}
+                        }
+
+		}while(!"-exit".equals(input));
+
+
 		
-		
-		if("-show".equals(input)) {
-			
-			show();
-			
-		}
-			
+
 		System.out.println("Program is closed.");
-                
+
 
 	}
-    
-    private void show(){
-		
-		int totalWords = 0;
-		int i = 0;
-	
-		for(Entry<Key,String> entry : probeHashTable.entrySet()) {
-			
-			if(entry != null) {
-				printTableLine(i, entry.getKey(), entry.getKey().hashCode());
-				
-			}
-			i++;
-		}
-	
-//		intrface.printTotalValues(totalWords, hashTable.size());
-	}
+
+
     public void printResults(int key,int index, String listOfTxtFile) {
-		
+
 		System.out.println("Key : " + key + "\nIndex : " + index + "\nListOfTxtFiles" + listOfTxtFile ) ;
-						  
+
 	}
     public void printNotFound(String search) {
-		
+
 		System.out.println(search + " is not found in text file.");
 	}
     public void printTableLine(int i, Key key, int hashCode) {
-			
-		System.out.println(String.format("%d. Key: %-20s HashCode: %-20d Count: %-5d", i, key, hashCode));
-			
-	}
-    
-    
-    
-    
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-	
-    
-    
+		System.out.println(String.format("%d. Key: %-20s HashCode: %-20d", i, key, hashCode));
+
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

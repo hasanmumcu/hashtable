@@ -1,11 +1,11 @@
 
-package hashtable;
+
 
 
 
 public abstract class AbstractHashMap<K,V> implements Map<K,V> {
 
-	private static final int DEFAULT_CAPACITY = 11;
+	private static final int DEFAULT_CAPACITY = 256;
 	private static final float DEFAULT_LOADFACTOR = 0.7f;
 	protected float loadFactor;
 	protected int threshold;

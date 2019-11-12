@@ -1,8 +1,7 @@
 
-package hashtable;
-
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 
@@ -10,6 +9,8 @@ import java.util.ArrayList;
 public class DoubleHashMap<K,V> extends AbstractHashMap<K,V> {
     private MapEntry<K,V>[] table;        // a fixed array of entries (all initially null)
     private MapEntry<K,V> DEFUNCT = new MapEntry<>(null, null);   //sentinel
+    int collision = 0 ; 
+
 
    
     public DoubleHashMap() { super(); }
@@ -33,24 +34,17 @@ public class DoubleHashMap<K,V> extends AbstractHashMap<K,V> {
     }
 
 
-    private int findEmptySlot(int index, int increment) {
-		
-		int step = 0;
-		
-		while(table[index] != null) {
-			
-			index = (index + increment) % table.length;
-			step += 1;
-		}
-		
-		return step; 
-	}
     protected V bucketGet(K key) {
-		
+
 		MapEntry<K,V> element = contains(key);
-		
+		String result = new String();
 		if(element == null) return null;
-		return element.getValue();
+                result += element.getMap().size() + " document(s) found.\n";
+                for(HashMap.Entry<V,Integer> entry : element.getMap().entrySet()){
+                    result += entry.getKey() + " " + entry.getValue() + "\n";
+                    }
+                
+		return (V)result;
 	}
     
     public int getIndex(K key) {
@@ -102,7 +96,7 @@ public class DoubleHashMap<K,V> extends AbstractHashMap<K,V> {
 					
 					if(!key.equals(table[index].getKey())) {
 						
-						index = ((index % table.length) + increment * (7 - ( index % 7 ))) % table.length ;
+						index = (index + increment * (83 - ( index % 83 ))) % table.length ;
 						counter += 1;
                                                 increment++;
 						
@@ -120,16 +114,7 @@ public class DoubleHashMap<K,V> extends AbstractHashMap<K,V> {
 		}
 		return null;	
 	}
-//    private int increment(K key) {
-//		
-//		int increment = (key.hashCode() / table.length) % table.length;
-//		
-//		if(increment == 0)
-//			increment = 1; 
-//		else if(increment < 0)
-//			increment += table.length;
-//		return increment;
-//	}
+
     private void resize() {
 		
 		int newCap = newPrimeCapacity();
@@ -181,11 +166,13 @@ public class DoubleHashMap<K,V> extends AbstractHashMap<K,V> {
 	
 
     protected V bucketPut(K key, V value) {
+        
         MapEntry<K,V> newEntry = new MapEntry<K,V>(key, value);                         
         int index = compression(newEntry.getKey());   
         MapEntry<K,V> oldEntry = table[index];
         MapEntry<K,V> ifFound = null;
         int increment = 0 ;
+        
         
         if(value == null) throw new IllegalArgumentException("Given value can not be null!");
         
@@ -202,8 +189,9 @@ public class DoubleHashMap<K,V> extends AbstractHashMap<K,V> {
         else
         {   
             while(table[index]!=null){
-                index = ((index % table.length) + increment * (7 - ( index % 7 ))) % table.length ;
+                index = (index + increment * (83 - ( index % 83 ))) % table.length ;
                 increment++;
+                collision++;
             }
             table[index] = newEntry;
             this.size += 1;
@@ -229,7 +217,7 @@ public class DoubleHashMap<K,V> extends AbstractHashMap<K,V> {
 //    }
 
 
-
+    @Override
     public Iterable<Entry<K,V>> entrySet() {
         ArrayList<Entry<K,V>> buffer = new ArrayList<>(this.capacity);
         for(Entry<K,V> element : table)
@@ -255,8 +243,10 @@ public class DoubleHashMap<K,V> extends AbstractHashMap<K,V> {
         @Override
            public void printMap(){
                for(MapEntry<K,V> a : table){
-                   System.out.println(a);
+                   if(a != null)
+                    System.out.println(a);
                }
-        
+               System.out.println(collision);
+               System.out.println(this.size);
            }
 }
